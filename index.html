@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBSTU Exam Countdown | CSE 2-1</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-main: #e0e0e0;
+            --accent: #00bcd4;
+            --danger: #ff5252;
+            --success: #66bb6a;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 { margin-bottom: 5px; text-align: center; }
+        p.subtitle { color: #888; margin-bottom: 30px; font-style: italic; }
+
+        /* The Big Countdown Timer */
+        #hero-timer {
+            background: linear-gradient(145deg, #252525, #1a1a1a);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            text-align: center;
+            margin-bottom: 40px;
+            width: 90%;
+            max-width: 600px;
+            border-left: 5px solid var(--accent);
+        }
+
+        #hero-subject { font-size: 1.5rem; color: var(--accent); font-weight: bold; }
+        #hero-countdown { font-size: 3rem; margin: 15px 0; font-family: monospace; }
+        #hero-date { color: #aaa; }
+
+        /* Exam List Grid */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .exam-card {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #333;
+            position: relative;
+            transition: transform 0.2s;
+        }
+
+        .exam-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .exam-card.backlog { border-left: 4px solid var(--danger); }
+        .exam-card.completed { opacity: 0.5; filter: grayscale(1); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .course-code { font-weight: bold; font-size: 1.2rem; }
+        .exam-date { color: #aaa; font-size: 0.9rem; }
+        .time-remaining { margin-top: 10px; color: var(--accent); font-weight: 600; }
+        
+        .delete-btn {
+            background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem;
+            display: none; /* Only show for backlogs */
+        }
+        .backlog .delete-btn { display: block; }
+
+        /* Controls */
+        .controls { margin-top: 50px; text-align: center; width: 100%; max-width: 600px; }
+        select, button {
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            margin: 5px;
+            font-size: 1rem;
+        }
+        select { background-color: #333; color: white; width: 70%; }
+        button { background-color: var(--accent); color: #000; font-weight: bold; cursor: pointer; }
+        button:hover { opacity: 0.9; }
+
+        .notification-banner {
+            background-color: var(--accent);
+            color: black;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none; /* Hidden by default */
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="notification-req" class="notification-banner" onclick="requestNotificationPermission()">
+        ⚠️ Click here to enable "Panic Mode" (Notifications) 1 day before exams!
+    </div>
+
+    <h1>MBSTU CSE Bamboo Eating Competition</h1>
+    <p class="subtitle">"Ahhhhhhhhhhhhhhh........."</p>
+
+    <div id="hero-timer">
+        <div>UPCOMING EXAM</div>
+        <div id="hero-subject">Loading...</div>
+        <div id="hero-countdown">00d 00h 00m 00s</div>
+        <div id="hero-date">...</div>
+    </div>
+
+    <div class="grid-container" id="exam-grid">
+        </div>
+
+    <div class="controls">
+        <h3>Got Backlogs?</h3>
+        <p style="font-size: 0.8rem; color: #888;">Select a course from other semesters to track it.</p>
+        <div style="display:flex; justify-content: center;">
+            <select id="backlog-selector">
+                <option value="" disabled selected>Select a backlog course...</option>
+                </select>
+            <button onclick="addBacklog()">Add</button>
+        </div>
+    </div>
+
+<script>
+    // --- 1. DATA ENTRY (Digitized from your image) ---
+    // Core exams for 2nd Year 1st Semester
+    const coreExams = [
+        { code: "CSE 2101", title: "Digital Logic Design", date: "2026-01-31T09:30:00" },
+        { code: "CSE 2109", title: "Math for CSE", date: "2026-02-03T09:30:00" }, // Assuming titles based on typical curriculum
+        { code: "CSE 2103", title: "Data Structures", date: "2026-02-07T09:30:00" },
+        { code: "CSE 2105", title: "Object Oriented Programming", date: "2026-02-15T09:30:00" },
+        { code: "CSE 2111", title: "Economics / Accounting", date: "2026-02-18T09:30:00" },
+        { code: "CSE 2107", title: "Discrete Math", date: "2026-02-23T09:30:00" }
+    ];
+
+    // Catalog of OTHER exams (for backlogs) found in the image
+    const backlogCatalog = [
+        // 1st Year 1st Sem
+        { code: "CSE 1101", title: "1-1 Exam", date: "2026-02-01T09:30:00" },
+        { code: "CSE 1111", title: "1-1 Exam", date: "2026-02-05T09:30:00" },
+        { code: "CSE 1109", title: "1-1 Exam", date: "2026-02-08T09:30:00" },
+        { code: "CSE 1105", title: "1-1 Exam", date: "2026-02-16T09:30:00" },
+        { code: "CSE 1107", title: "1-1 Exam", date: "2026-02-22T09:30:00" },
+        { code: "CSE 1103", title: "1-1 Exam", date: "2026-02-28T09:30:00" },
+        // 3rd Year 1st Sem
+        { code: "CSE 3101", title: "3-1 Exam", date: "2026-02-02T13:30:00" },
+        { code: "CSE 3103", title: "3-1 Exam", date: "2026-02-08T13:30:00" },
+        { code: "CSE 3105", title: "3-1 Exam", date: "2026-02-17T13:30:00" },
+        { code: "CSE 3107", title: "3-1 Exam", date: "2026-02-23T13:30:00" },
+        // 3rd Year 2nd Sem
+        { code: "CSE 3201", title: "3-2 Exam", date: "2026-02-01T13:30:00" },
+        { code: "CSE 3203", title: "3-2 Exam", date: "2026-02-07T13:30:00" },
+        { code: "CSE 3205", title: "3-2 Exam", date: "2026-02-15T13:30:00" },
+        { code: "CSE 3211", title: "3-2 Exam", date: "2026-02-24T13:30:00" },
+        { code: "CSE 3207", title: "3-2 Exam", date: "2026-02-28T13:30:00" }
+    ];
+
+    // --- 2. STATE MANAGEMENT ---
+    let myExams = [...coreExams]; 
+
+    // Load backlogs from LocalStorage
+    function loadData() {
+        const savedBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
+        // Merge core exams with saved backlogs
+        myExams = [...coreExams, ...savedBacklogs];
+        
+        // Sort by date
+        myExams.sort((a, b) => new Date(a.date) - new Date(b.date));
+        
+        render();
+        updateTimers();
+    }
+
+    // --- 3. RENDERING ---
+    function render() {
+        const grid = document.getElementById('exam-grid');
+        grid.innerHTML = '';
+        
+        const now = new Date();
+        let nextExamFound = false;
+
+        myExams.forEach(exam => {
+            const examDate = new Date(exam.date);
+            const isBacklog = !coreExams.some(e => e.code === exam.code);
+            const isCompleted = now > examDate;
+
+            // Update Hero Section for the VERY NEXT exam
+            if (!nextExamFound && !isCompleted) {
+                document.getElementById('hero-subject').innerText = `${exam.code}`;
+                document.getElementById('hero-date').innerText = examDate.toLocaleString();
+                document.getElementById('hero-timer').dataset.target = exam.date;
+                nextExamFound = true;
+            }
+
+            // Create Card
+            const card = document.createElement('div');
+            card.className = `exam-card ${isBacklog ? 'backlog' : ''} ${isCompleted ? 'completed' : ''}`;
+            card.innerHTML = `
+                <div class="card-header">
+                    <span class="course-code">${exam.code} ${isBacklog ? '<small>(Backlog)</small>' : ''}</span>
+                    ${isBacklog ? `<button class="delete-btn" onclick="removeBacklog('${exam.code}')">&times;</button>` : ''}
+                </div>
+                <div class="exam-date">${examDate.toLocaleDateString()} at ${examDate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <div class="time-remaining" data-target="${exam.date}">Calculating...</div>
+            `;
+            grid.appendChild(card);
+        });
+
+        // Populate Dropdown (exclude already added exams)
+        const selector = document.getElementById('backlog-selector');
+        selector.innerHTML = '<option value="" disabled selected>Select a backlog course...</option>';
+        backlogCatalog.forEach(item => {
+            if (!myExams.some(e => e.code === item.code)) {
+                const opt = document.createElement('option');
+                opt.value = JSON.stringify(item);
+                opt.innerText = `${item.code} - ${new Date(item.date).toLocaleDateString()}`;
+                selector.appendChild(opt);
+            }
+        });
+    }
+
+    // --- 4. LOGIC & TIMERS ---
+    function updateTimers() {
+        const now = new Date();
+        
+        // Update Grid Cards
+        document.querySelectorAll('.time-remaining').forEach(el => {
+            const target = new Date(el.dataset.target);
+            const diff = target - now;
+            
+            if (diff < 0) {
+                el.innerText = "Exam Finished (RIP?)";
+                el.style.color = "#666";
+            } else {
+                el.innerText = formatTime(diff);
+                checkNotification(target, el.closest('.exam-card').querySelector('.course-code').innerText);
+            }
+        });
+
+        // Update Hero Timer
+        const heroTimer = document.getElementById('hero-timer');
+        if (heroTimer.dataset.target) {
+            const target = new Date(heroTimer.dataset.target);
+            const diff = target - now;
+            document.getElementById('hero-countdown').innerText = diff > 0 ? formatTime(diff) : "00d 00h 00m 00s";
+        } else {
+            document.getElementById('hero-subject').innerText = "All Exams Done!";
+            document.getElementById('hero-countdown').innerText = "Party Time!";
+        }
+    }
+
+    function formatTime(ms) {
+        const d = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${d}d ${h}h ${m}m ${s}s`;
+    }
+
+    // --- 5. BACKLOG HANDLERS ---
+    window.addBacklog = function() {
+        const selector = document.getElementById('backlog-selector');
+        if (!selector.value) return;
+        
+        const course = JSON.parse(selector.value);
+        const currentBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
+        
+        currentBacklogs.push(course);
+        localStorage.setItem('myBacklogs', JSON.stringify(currentBacklogs));
+        loadData();
+    }
+
+    window.removeBacklog = function(code) {
+        let currentBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
+        currentBacklogs = currentBacklogs.filter(c => c.code !== code);
+        localStorage.setItem('myBacklogs', JSON.stringify(currentBacklogs));
+        loadData();
+    }
+
+    // --- 6. NOTIFICATIONS ---
+    // Check if permission is needed
+    if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+        document.getElementById('notification-req').style.display = 'block';
+    }
+
+    window.requestNotificationPermission = function() {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                document.getElementById('notification-req').style.display = 'none';
+                new Notification("Notifications Enabled!", { body: "We will warn you 24h before an exam." });
+            }
+        });
+    }
+
+    let notifiedExams = JSON.parse(localStorage.getItem('notifiedExams')) || [];
+
+    function checkNotification(examDate, courseName) {
+        if (Notification.permission !== "granted") return;
+
+        const now = new Date();
+        const diffHours = (examDate - now) / (1000 * 60 * 60);
+
+        // If between 23 and 24 hours remaining, and haven't notified yet
+        if (diffHours <= 24 && diffHours > 23) {
+            const notificationId = `${courseName}-${examDate.getTime()}`;
+            
+            if (!notifiedExams.includes(notificationId)) {
+                new Notification(`⚠️ 24 HOURS REMAINING!`, {
+                    body: `Start panicking! ${courseName} is tomorrow!`,
+                    icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+                });
+                
+                notifiedExams.push(notificationId);
+                localStorage.setItem('notifiedExams', JSON.stringify(notifiedExams));
+            }
+        }
+    }
+
+    // Start the loops
+    loadData();
+    setInterval(updateTimers, 1000);
+
+</script>
+</body>
+</html>
