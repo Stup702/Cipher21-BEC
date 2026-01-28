@@ -202,9 +202,15 @@
         const heroTimer = document.getElementById('hero-timer');
         if (heroExam) {
             heroTimer.style.display = "block"; // Show box
+            const hd = new Date(heroExam.date);
+            
+            // Format: dd-mm-yyyy at hh:mm AM/PM
+            const dateStr = hd.toLocaleDateString('en-GB').replace(/\//g, '-');
+            const timeStr = hd.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
             document.getElementById('hero-subject').innerText = heroExam.code;
             document.getElementById('hero-title').innerText = heroExam.title;
-            document.getElementById('hero-date').innerText = new Date(heroExam.date).toLocaleString();
+            document.getElementById('hero-date').innerText = `${dateStr} at ${timeStr}`;
             heroTimer.dataset.target = heroExam.date;
         } else {
             // No exams left at all?
@@ -231,6 +237,9 @@
                 return; // Skip rendering in grid (it's already in the big box)
             }
 
+            // Date Format for Grid: dd-mm-yyyy
+            const gridDateStr = examDate.toLocaleDateString('en-GB').replace(/\//g, '-');
+
             // If we are here, it's a future exam that isn't the main one
             const card = document.createElement('div');
             card.className = `exam-card ${isBacklog ? 'backlog' : ''}`;
@@ -241,7 +250,7 @@
                     ${isBacklog ? `<button class="delete-btn" onclick="removeBacklog('${exam.code}')">&times;</button>` : ''}
                 </div>
                 <div class="exam-title">${exam.title}</div>
-                <div class="exam-date">${examDate.toLocaleDateString()}</div>
+                <div class="exam-date">${gridDateStr}</div>
                 <div class="time-remaining" data-target="${exam.date}">...</div>
             `;
             grid.appendChild(card);
@@ -262,7 +271,9 @@
             if (!myExams.some(e => e.code === item.code)) {
                 const opt = document.createElement('option');
                 opt.value = JSON.stringify(item);
-                opt.innerText = `${item.code} - ${item.title}`;
+                // Also format date in dropdown
+                const ddDate = new Date(item.date).toLocaleDateString('en-GB').replace(/\//g, '-');
+                opt.innerText = `${item.code} - ${item.title} (${ddDate})`;
                 selector.appendChild(opt);
             }
         });
