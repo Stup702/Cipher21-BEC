@@ -97,7 +97,7 @@
 <body>
 
     <div id="notification-req" class="notification-banner" onclick="requestNotificationPermission()">
-        ⚠️ Click to enable Class Alerts (Notifies 15 mins before class)
+        ⚠️ Click to enable Class Alerts (Notifies 30 mins before class)
     </div>
 
     <h1>Daily Heads-Up</h1>
@@ -292,7 +292,7 @@
         Notification.requestPermission().then(permission => {
             if (permission === "granted") {
                 document.getElementById('notification-req').style.display = 'none';
-                new Notification("Class Alerts Enabled", { body: "You will be pinged 15 mins before class." });
+                new Notification("Class Alerts Enabled", { body: "You will be pinged 30 mins before class." });
             }
         });
     }
@@ -304,10 +304,10 @@
         const now = new Date();
         const diffMins = (classDate - now) / (1000 * 60);
 
-        if (diffMins <= 15 && diffMins > 14.8) {
+        if (diffMins <= 30 && diffMins > 29.8) {
             const notificationId = `${courseCode}-${classDate.getTime()}`;
             if (!notifiedClasses.includes(notificationId)) {
-                new Notification(`Class in 15 Minutes!`, {
+                new Notification(`Class in 30 Minutes!`, {
                     body: `Get ready for ${courseCode}.`,
                 });
                 notifiedClasses.push(notificationId);
