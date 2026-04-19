@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Cipher 21 Exam Countdown</title>
+    <title>Daily Class Routine</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -40,7 +40,6 @@
             width: 90%;
             max-width: 600px;
             border-left: 5px solid var(--accent);
-            /* Hidden by default until JS loads */
             display: none; 
         }
 
@@ -68,10 +67,6 @@
         }
 
         .exam-card:hover { transform: translateY(-5px); border-color: var(--accent); }
-        .exam-card.backlog { border-left: 4px solid var(--danger); }
-        
-        /* Completed exams are hidden in grid, but we keep this class just in case */
-        .exam-card.completed { display: none; }
 
         .card-header { display: flex; justify-content: space-between; align-items: center; }
         .course-code { font-weight: bold; font-size: 1.2rem; color: var(--accent); }
@@ -86,25 +81,6 @@
         .exam-date { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
         .time-remaining { color: #ddd; font-weight: 600; font-family: monospace; font-size: 1.1rem; }
         
-        .delete-btn {
-            background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem;
-            display: none; 
-        }
-        .backlog .delete-btn { display: block; }
-
-        /* Controls */
-        .controls { margin-top: 50px; text-align: center; width: 100%; max-width: 600px; }
-        select, button {
-            padding: 10px 15px;
-            border-radius: 5px;
-            border: none;
-            margin: 5px;
-            font-size: 1rem;
-        }
-        select { background-color: #333; color: white; width: 70%; }
-        button { background-color: var(--accent); color: #000; font-weight: bold; cursor: pointer; }
-        button:hover { opacity: 0.9; }
-
         .notification-banner {
             background-color: var(--accent);
             color: black;
@@ -116,184 +92,171 @@
         }
         
         .footer-note { margin-top: 50px; color: #555; font-size: 0.8rem; }
-        .history-text { color: #444; margin-top: 10px; font-size: 0.9rem; }
-
     </style>
 </head>
 <body>
 
     <div id="notification-req" class="notification-banner" onclick="requestNotificationPermission()">
-        ⚠️ Click here to enable "Panic Mode" (Notifications) 1 day before exams!
+        ⚠️ Click to enable Class Alerts (Notifies 15 mins before class)
     </div>
 
-    <h1>Cipher 21 Exam Schedule</h1>
-    <p class="subtitle">Good luck, Bro!</p>
+    <h1>Daily Heads-Up</h1>
+    <p class="subtitle" id="current-day-label">Loading schedule...</p>
 
     <div id="hero-timer">
-        <div>UPCOMING EXAM</div>
+        <div id="hero-header">NEXT CLASS</div>
         <div id="hero-subject">Loading...</div>
         <div id="hero-title"></div> 
         <div id="hero-countdown">00d 00h 00m 00s</div>
         <div id="hero-date">...</div>
     </div>
 
-    <div class="grid-container" id="exam-grid">
-        </div>
+    <div class="grid-container" id="exam-grid"></div>
 
-    <div id="yeeted-count" class="history-text"></div>
-
-    <div class="controls">
-        <h3>Got Backlogs?</h3>
-        <p style="font-size: 0.8rem; color: #888;">Select a course from other semesters to track it.</p>
-        <div style="display:flex; justify-content: center;">
-            <select id="backlog-selector">
-                <option value="" disabled selected>Select a backlog course...</option>
-                </select>
-            <button onclick="addBacklog()">Add</button>
-        </div>
-    </div>
-
-    <div class="footer-note">Built by Bahl (stup702)</div>
+    <div class="footer-note">Strict Daily Routine Active</div>
 
 <script>
-    // --- 1. DATA ENTRY ---
-    const coreExams = [
-        { code: "CSE 2101", title: "OOP", date: "2026-01-31T09:30:00" },
-        { code: "CSE 2109", title: "Econo", date: "2026-02-03T09:30:00" }, 
-        { code: "CSE 2103", title: "DSA", date: "2026-02-07T09:30:00" },
-        { code: "CSE 2105", title: "COA", date: "2026-02-15T09:30:00" },
-        { code: "CSE 2111", title: "Accounting", date: "2026-02-18T09:30:00" },
-        { code: "CSE 2107", title: "MLA", date: "2026-02-23T09:30:00" }
+    // --- 1. ROUTINE DATA ENTRY ---
+    const routine = [
+        // Saturday (6)
+        { day: 6, start: "10:30", code: "CSE 2206", title: "OOAD Lab-1 (MSM)", room: "Lab-1" },
+        { day: 6, start: "14:20", code: "CSE 2207", title: "Microprocessor (MR)", room: "Room 340" },
+        { day: 6, start: "15:10", code: "CSE 2205", title: "OOAD (MSM)", room: "Room 340" },
+
+        // Sunday (0)
+        { day: 0, start: "08:50", code: "CSE 2211", title: "Math (MAI)", room: "Room 341" },
+        { day: 0, start: "09:40", code: "CSE 2203", title: "DBMS (MKN)", room: "Room 341" },
+        { day: 0, start: "10:30", code: "CSE 2204", title: "DBMS Lab-2 (MKN)", room: "Lab-2" },
+        { day: 0, start: "13:30", code: "CSE 2201", title: "Algo (MSH)", room: "Room 340" },
+        { day: 0, start: "14:20", code: "CSE 2202", title: "Algo Lab-1 (MSH)", room: "Lab-1" },
+
+        // Monday (1)
+        { day: 1, start: "08:50", code: "CSE 2201", title: "Algo (MSH)", room: "Room 338" },
+        { day: 1, start: "09:40", code: "CSE 2203", title: "DBMS (MKN)", room: "Room 338" },
+        { day: 1, start: "10:30", code: "CSE 2202", title: "Algo Lab (MSH)", room: "Room 2" },
+        { day: 1, start: "13:30", code: "CSE 2204", title: "DBMS Lab-1 (MKN)", room: "Lab-1" },
+        { day: 1, start: "15:10", code: "CSE 2211", title: "Math (MAI)", room: "Room 338" },
+
+        // Tuesday (2)
+        { day: 2, start: "08:50", code: "CSE 2201", title: "Algo (MSH)", room: "Room 338" },
+        { day: 2, start: "09:40", code: "CSE 2203", title: "DBMS (MKN)", room: "Room 338" },
+        { day: 2, start: "10:30", code: "CSE 2209", title: "Data Comm (MB)", room: "Room 338" },
+        { day: 2, start: "13:30", code: "CSE 2208", title: "Assembly Lab-1 (MHR)", room: "Lab-1" },
+        { day: 2, start: "14:20", code: "CSE 2207", title: "Microprocessor (MR)", room: "Room 338" },
+
+        // Wednesday (3)
+        { day: 3, start: "08:50", code: "CSE 2211", title: "Math (MAI)", room: "Room 338" },
+        { day: 3, start: "09:40", code: "CSE 2205", title: "OOAD (MSM)", room: "Room 338" },
+        { day: 3, start: "10:30", code: "CSE 2209", title: "Data Comm (MB)", room: "Room 338" },
+        { day: 3, start: "11:20", code: "CSE 2207", title: "Microprocessor (MR)", room: "Room 338" },
+        { day: 3, start: "13:30", code: "CSE 2210", title: "Data Comm Lab-3 (MB)", room: "Lab-3" }
     ];
 
-    const backlogCatalog = [
-        { code: "CSE 1101", title: "Computer Fundamentals", date: "2026-02-01T09:30:00" },
-        { code: "CSE 1111", title: "English", date: "2026-02-05T09:30:00" },
-        { code: "CSE 1109", title: "Chem", date: "2026-02-08T09:30:00" },
-        { code: "CSE 1105", title: "Discrete", date: "2026-02-16T09:30:00" },
-        { code: "CSE 1107", title: "Diff Cal", date: "2026-02-22T09:30:00" },
-        { code: "CSE 1103", title: "ECA", date: "2026-02-28T09:30:00" },
+    const daysMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const flavorTexts = [
+        "Are you crazy? Classes are OVER, MAN!",
+        " GO TOUCH SOME GRASS, BRO!",
+        "I Think you opened the wrong app.", 
+        "Insert no one here gif. 😆"
     ];
 
-    // --- 2. STATE MANAGEMENT ---
-    let myExams = [...coreExams]; 
+    let currentDailyClasses = [];
+    let flavorLocked = "";
 
-    function loadData() {
-        const savedBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
-        myExams = [...coreExams, ...savedBacklogs];
-        myExams.sort((a, b) => new Date(a.date) - new Date(b.date));
-        render();
-        updateTimers();
+    // --- 2. ENGINE (DAILY ONLY) ---
+    function getTodayClasses() {
+        const now = new Date();
+        const currentDay = now.getDay();
+        
+        let occurrences = [];
+        
+        routine.forEach(cls => {
+            // Only care if the class is scheduled for the current day
+            if (cls.day === currentDay) {
+                const [hours, minutes] = cls.start.split(':').map(Number);
+                let classDate = new Date(now);
+                classDate.setHours(hours, minutes, 0, 0);
+                
+                // Only push it if the class hasn't happened yet today
+                if (classDate > now) {
+                    occurrences.push({ ...cls, nextDate: classDate });
+                }
+            }
+        });
+        
+        return occurrences.sort((a, b) => a.nextDate - b.nextDate);
     }
 
     // --- 3. RENDERING ---
     function render() {
+        const now = new Date();
+        currentDailyClasses = getTodayClasses();
         const grid = document.getElementById('exam-grid');
         grid.innerHTML = '';
         
-        const now = new Date();
-        let heroExam = null;
-        let completedCount = 0;
+        document.getElementById('current-day-label').innerText = `${daysMap[now.getDay()]}'s Schedule`;
 
-        // 1. Find the Hero (First exam that isn't finished)
-        heroExam = myExams.find(exam => new Date(exam.date) > now);
-
-        // 2. Render Hero
         const heroTimer = document.getElementById('hero-timer');
-        if (heroExam) {
-            heroTimer.style.display = "block"; // Show box
-            const hd = new Date(heroExam.date);
+        heroTimer.style.display = "block";
+
+        // NO CLASSES LEFT TODAY STATE
+        if (currentDailyClasses.length === 0) {
+            if(!flavorLocked) {
+                flavorLocked = flavorTexts[Math.floor(Math.random() * flavorTexts.length)];
+            }
             
-            // Format: dd-mm-yyyy at hh:mm AM/PM
-            const dateStr = hd.toLocaleDateString('en-GB').replace(/\//g, '-');
-            const timeStr = hd.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            
-            document.getElementById('hero-subject').innerText = heroExam.code;
-            document.getElementById('hero-title').innerText = heroExam.title;
-            document.getElementById('hero-date').innerText = `${dateStr} at ${timeStr}`;
-            heroTimer.dataset.target = heroExam.date;
-        } else {
-            // No exams left at all?
-            heroTimer.style.display = "block";
-            document.getElementById('hero-subject').innerText = "FREEDOM";
-            document.getElementById('hero-title').innerText = "No exams pending";
-            document.getElementById('hero-countdown').innerText = "GG WP";
+            document.getElementById('hero-header').innerText = "STATUS: IDLE";
+            document.getElementById('hero-subject').innerText = "GG WP";
+            document.getElementById('hero-title').innerText = flavorLocked;
+            document.getElementById('hero-countdown').innerText = "- - -";
+            document.getElementById('hero-date').innerText = "No more classes today.";
             heroTimer.removeAttribute('data-target');
+            return;
         }
 
-        // 3. Render Grid (Skip Hero and Skip Completed)
-        myExams.forEach(exam => {
-            const examDate = new Date(exam.date);
-            const isBacklog = !coreExams.some(e => e.code === exam.code);
-            const isCompleted = now > examDate;
-            const isHero = heroExam && exam.code === heroExam.code;
+        // RESET FLAVOR LOCK IF WE HAVE CLASSES (e.g. at midnight)
+        flavorLocked = "";
 
-            if (isCompleted) {
-                completedCount++;
-                return; // YEET (Don't render)
-            }
+        // RENDER HERO CLASS
+        const heroClass = currentDailyClasses[0];
+        const timeOptions = { hour: '2-digit', minute:'2-digit' };
+        
+        document.getElementById('hero-header').innerText = "NEXT UP";
+        document.getElementById('hero-subject').innerText = heroClass.code;
+        document.getElementById('hero-title').innerText = `${heroClass.title} - ${heroClass.room}`;
+        document.getElementById('hero-date').innerText = `Today at ${heroClass.nextDate.toLocaleTimeString([], timeOptions)}`;
+        heroTimer.dataset.target = heroClass.nextDate;
 
-            if (isHero) {
-                return; // Skip rendering in grid (it's already in the big box)
-            }
-
-            // Date Format for Grid: dd-mm-yyyy
-            const gridDateStr = examDate.toLocaleDateString('en-GB').replace(/\//g, '-');
-
-            // If we are here, it's a future exam that isn't the main one
+        // RENDER THE REST OF THE DAY IN GRID
+        currentDailyClasses.slice(1).forEach(cls => {
             const card = document.createElement('div');
-            card.className = `exam-card ${isBacklog ? 'backlog' : ''}`;
+            card.className = `exam-card`;
             
             card.innerHTML = `
                 <div class="card-header">
-                    <span class="course-code">${exam.code} ${isBacklog ? '<small>(Back)</small>' : ''}</span>
-                    ${isBacklog ? `<button class="delete-btn" onclick="removeBacklog('${exam.code}')">&times;</button>` : ''}
+                    <span class="course-code">${cls.code}</span>
                 </div>
-                <div class="exam-title">${exam.title}</div>
-                <div class="exam-date">${gridDateStr}</div>
-                <div class="time-remaining" data-target="${exam.date}">...</div>
+                <div class="exam-title">${cls.title}</div>
+                <div class="exam-date">Today at ${cls.nextDate.toLocaleTimeString([], timeOptions)} | ${cls.room}</div>
+                <div class="time-remaining" data-target="${cls.nextDate}">...</div>
             `;
             grid.appendChild(card);
-        });
-
-        // 4. Update Footer Status
-        const statusDiv = document.getElementById('yeeted-count');
-        if(completedCount > 0) {
-            statusDiv.innerText = `${completedCount} exams yeeted into the void (finished).`;
-        } else {
-            statusDiv.innerText = "";
-        }
-
-        // Populate Dropdown
-        const selector = document.getElementById('backlog-selector');
-        selector.innerHTML = '<option value="" disabled selected>Select a backlog course...</option>';
-        backlogCatalog.forEach(item => {
-            if (!myExams.some(e => e.code === item.code)) {
-                const opt = document.createElement('option');
-                opt.value = JSON.stringify(item);
-                // Also format date in dropdown
-                const ddDate = new Date(item.date).toLocaleDateString('en-GB').replace(/\//g, '-');
-                opt.innerText = `${item.code} - ${item.title} (${ddDate})`;
-                selector.appendChild(opt);
-            }
         });
     }
 
     // --- 4. LOGIC & TIMERS ---
     function updateTimers() {
         const now = new Date();
+        let forceReload = false;
         
         // Grid Timers
         document.querySelectorAll('.time-remaining').forEach(el => {
             const target = new Date(el.dataset.target);
             const diff = target - now;
             
-            if (diff <= 0) {
-                // If an exam expires while page is open, reload to "yeet" it instantly
-                loadData(); 
-            } else {
-                el.innerText = formatTime(diff);
-            }
+            if (diff <= 0) forceReload = true;
+            else el.innerText = formatTime(diff);
         });
 
         // Hero Timer
@@ -301,45 +264,26 @@
         if (heroTimer.dataset.target) {
             const target = new Date(heroTimer.dataset.target);
             const diff = target - now;
-            if (diff <= 0) {
-                loadData(); // Yeet instant
-            } else {
+            if (diff <= 0) forceReload = true;
+            else {
                 document.getElementById('hero-countdown').innerText = formatTime(diff);
-                
-                // Notifications logic
                 const heroTitle = document.getElementById('hero-subject').innerText;
                 checkNotification(target, heroTitle);
             }
         }
+
+        // If a class just passed, drop it from the DOM
+        if (forceReload) render(); 
     }
 
     function formatTime(ms) {
-        const d = Math.floor(ms / (1000 * 60 * 60 * 24));
         const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((ms % (1000 * 60)) / 1000);
-        return `${d}d ${h}h ${m}m ${s}s`;
+        return `${h}h ${m}m ${s}s`;
     }
 
-    // --- 5. BACKLOG HANDLERS ---
-    window.addBacklog = function() {
-        const selector = document.getElementById('backlog-selector');
-        if (!selector.value) return;
-        const course = JSON.parse(selector.value);
-        const currentBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
-        currentBacklogs.push(course);
-        localStorage.setItem('myBacklogs', JSON.stringify(currentBacklogs));
-        loadData();
-    }
-
-    window.removeBacklog = function(code) {
-        let currentBacklogs = JSON.parse(localStorage.getItem('myBacklogs')) || [];
-        currentBacklogs = currentBacklogs.filter(c => c.code !== code);
-        localStorage.setItem('myBacklogs', JSON.stringify(currentBacklogs));
-        loadData();
-    }
-
-    // --- 6. NOTIFICATIONS ---
+    // --- 5. NOTIFICATIONS ---
     if (Notification.permission !== "granted" && Notification.permission !== "denied") {
         document.getElementById('notification-req').style.display = 'block';
     }
@@ -348,34 +292,42 @@
         Notification.requestPermission().then(permission => {
             if (permission === "granted") {
                 document.getElementById('notification-req').style.display = 'none';
-                new Notification("Notifications Enabled!", { body: "We will warn you 24h before an exam." });
+                new Notification("Class Alerts Enabled", { body: "You will be pinged 15 mins before class." });
             }
         });
     }
 
-    let notifiedExams = JSON.parse(localStorage.getItem('notifiedExams')) || [];
+    let notifiedClasses = JSON.parse(localStorage.getItem('notifiedClasses')) || [];
 
-    function checkNotification(examDate, courseName) {
+    function checkNotification(classDate, courseCode) {
         if (Notification.permission !== "granted") return;
         const now = new Date();
-        const diffHours = (examDate - now) / (1000 * 60 * 60);
+        const diffMins = (classDate - now) / (1000 * 60);
 
-        if (diffHours <= 24 && diffHours > 23) {
-            const notificationId = `${courseName}-${examDate.getTime()}`;
-            if (!notifiedExams.includes(notificationId)) {
-                new Notification(`⚠️ 24 HOURS REMAINING!`, {
-                    body: `Start panicking! ${courseName} is tomorrow!`,
-                    icon: "https://cdn-icons-png.flaticon.com/512/564/564619.png"
+        if (diffMins <= 15 && diffMins > 14.8) {
+            const notificationId = `${courseCode}-${classDate.getTime()}`;
+            if (!notifiedClasses.includes(notificationId)) {
+                new Notification(`Class in 15 Minutes!`, {
+                    body: `Get ready for ${courseCode}.`,
                 });
-                notifiedExams.push(notificationId);
-                localStorage.setItem('notifiedExams', JSON.stringify(notifiedExams));
+                notifiedClasses.push(notificationId);
+                if (notifiedClasses.length > 20) notifiedClasses.shift();
+                localStorage.setItem('notifiedClasses', JSON.stringify(notifiedClasses));
             }
         }
     }
 
-    // Start
-    loadData();
+    // Init
+    render();
     setInterval(updateTimers, 1000);
+
+    // Refresh every minute to check if day rolled over exactly at midnight
+    setInterval(() => {
+        const now = new Date();
+        if (now.getHours() === 0 && now.getMinutes() === 0) {
+            render();
+        }
+    }, 60000);
 
 </script>
 </body>
