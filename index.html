@@ -116,6 +116,37 @@
     <div class="footer-note">Strict Daily Routine Active</div>
 
 <script>
+    // --- 0. SINGLE INSTANCE ENFORCER ---
+    const channel = new BroadcastChannel('app_instance_channel');
+
+    // Tell other tabs we just opened
+    channel.postMessage('new_tab_opened');
+
+    // Listen for other tabs
+    channel.onmessage = (event) => {
+        if (event.data === 'new_tab_opened') {
+            // We are the original tab. Tell the new tab we exist.
+            channel.postMessage('already_open');
+        } 
+        if (event.data === 'already_open') {
+            // We are the duplicate tab. Show an error or close.
+            alert('Routine is already open in another tab. Closing this duplicate.');
+            
+            // Attempt to close the tab
+            window.close();
+            
+            // Fallback UI if the browser blocks window.close()
+            document.body.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; text-align:center;">
+                    <h1 style="color: var(--danger);">Duplicate Tab Blocked</h1>
+                    <p>The class routine is already open in another tab.</p>
+                    <p style="color: #888;">Please close this tab to save memory.</p>
+                </div>
+            `;
+        }
+    };
+
+
     // --- 1. ROUTINE DATA ENTRY ---
     const routine = [
         // Saturday (6)
