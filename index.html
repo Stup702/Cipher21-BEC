@@ -359,19 +359,14 @@
             render();
         }
     }, 60000);
-// --- SLEEP OVERRIDE FOR LOCAL FILES ---
-    // 1. Wake up the clock the millisecond the screen turns on
+    // --- 6. WAKE UP FROM SLEEP FIX ---
     document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "visible") {
-            render();
+            // The millisecond the user returns to the tab or unlocks their phone,
+            // force the timers to update so they don't see a frozen clock.
             updateTimers();
         }
     });
-
-    // 2. Force the clock to tick if you tap anywhere on the screen
-    document.addEventListener("touchstart", () => {
-        updateTimers();
-    }, { passive: true });
 </script>
 </body>
 </html>
