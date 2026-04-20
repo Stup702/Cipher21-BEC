@@ -5,7 +5,7 @@
     <meta name="theme-color" content="#00bcd4">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Class Routine</title>
+    <title>Class Routine</title>
     <style>
         :root {
             --bg-color: #121212;
@@ -29,7 +29,8 @@
         }
 
         h1 { margin-bottom: 5px; text-align: center; }
-        
+        p.subtitle { color: #888; margin-bottom: 30px; font-style: italic; }
+
         /* Dropdown Styling */
         .controls { margin-bottom: 15px; }
         #day-selector {
@@ -44,8 +45,6 @@
             font-weight: bold;
         }
         #day-selector:focus { box-shadow: 0 0 5px var(--accent); }
-
-        p.subtitle { color: #888; margin-bottom: 30px; font-style: italic; }
 
         /* The Big Countdown Timer */
         #hero-timer {
@@ -118,7 +117,7 @@
         ⚠️ Click to enable Class Alerts (Notifies 30 mins before class)
     </div>
 
-    <h1>Class Routine</h1>
+    <h1>Daily Heads-Up</h1>
     
     <div class="controls">
         <select id="day-selector" onchange="handleDayChange()">
@@ -150,9 +149,13 @@
 <script>
     // --- 0. SINGLE INSTANCE ENFORCER ---
     const channel = new BroadcastChannel('app_instance_channel');
+
     channel.postMessage('new_tab_opened');
+
     channel.onmessage = (event) => {
-        if (event.data === 'new_tab_opened') channel.postMessage('already_open');
+        if (event.data === 'new_tab_opened') {
+            channel.postMessage('already_open');
+        } 
         if (event.data === 'already_open') {
             alert('Routine is already open in another tab. Closing this duplicate.');
             window.close();
@@ -165,6 +168,7 @@
             `;
         }
     };
+
 
     // --- 1. ROUTINE DATA ENTRY ---
     const routine = [
@@ -203,6 +207,7 @@
     ];
 
     const daysMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
     const flavorTexts = [
         "Are you crazy? Classes are OVER, MAN!",
         " GO TOUCH SOME GRASS, BRO!",
@@ -212,9 +217,9 @@
 
     let currentDailyClasses = [];
     let flavorLocked = "";
-    let selectedDayOverride = -1; 
+    let selectedDayOverride = -1; // -1 means "Today"
 
-    // --- 2. ENGINE ---
+    // --- 2. ENGINE (DAILY ONLY) ---
     function handleDayChange() {
         selectedDayOverride = parseInt(document.getElementById('day-selector').value);
         render();
@@ -239,16 +244,18 @@
                 let classDate = new Date(now);
                 classDate.setHours(hours, minutes, 0, 0);
                 
-                // Calculate difference in days to map the exact future Date
+                // If the selected day is in the future, push the date forward
                 let daysAhead = targetDay - currentDay;
-                if (daysAhead < 0) daysAhead += 7; 
+                if (daysAhead < 0) daysAhead += 7; // Wrap to next week
                 classDate.setDate(now.getDate() + daysAhead);
                 
                 if (isToday) {
-                    // If it is today, drop past classes
-                    if (classDate > now) occurrences.push({ ...cls, nextDate: classDate });
+                    // Only push if it hasn't happened yet today
+                    if (classDate > now) {
+                        occurrences.push({ ...cls, nextDate: classDate });
+                    }
                 } else {
-                    // If looking at a future/past day, show the full list of classes
+                    // If it's a different day, show the whole schedule
                     occurrences.push({ ...cls, nextDate: classDate });
                 }
             }
@@ -259,20 +266,23 @@
 
     // --- 3. RENDERING ---
     function render() {
+        const now = new Date();
         currentDailyClasses = getSelectedDayClasses();
         const grid = document.getElementById('exam-grid');
         grid.innerHTML = '';
         
+        const isToday = (getActiveDay() === now.getDay());
         const activeDayText = selectedDayOverride === -1 ? "Today's" : daysMap[getActiveDay()] + "'s";
         document.getElementById('current-day-label').innerText = `${activeDayText} Schedule`;
 
         const heroTimer = document.getElementById('hero-timer');
         heroTimer.style.display = "block";
 
-        const isToday = (getActiveDay() === new Date().getDay());
-
+        // NO CLASSES LEFT TODAY STATE
         if (currentDailyClasses.length === 0) {
-            if(!flavorLocked) flavorLocked = flavorTexts[Math.floor(Math.random() * flavorTexts.length)];
+            if(!flavorLocked) {
+                flavorLocked = flavorTexts[Math.floor(Math.random() * flavorTexts.length)];
+            }
             
             document.getElementById('hero-header').innerText = "STATUS: IDLE";
             document.getElementById('hero-subject').innerText = "GG WP";
@@ -283,7 +293,10 @@
             return;
         }
 
+        // RESET FLAVOR LOCK IF WE HAVE CLASSES
         flavorLocked = "";
+
+        // RENDER HERO CLASS
         const heroClass = currentDailyClasses[0];
         const timeOptions = { hour: '2-digit', minute:'2-digit' };
         
@@ -291,16 +304,19 @@
         document.getElementById('hero-subject').innerText = heroClass.code;
         document.getElementById('hero-title').innerText = `${heroClass.title} - ${heroClass.room}`;
         
-        // Show actual date if looking at next week, otherwise "Today"
         const datePrefix = isToday ? "Today" : heroClass.nextDate.toLocaleDateString('en-GB').replace(/\//g, '-');
         document.getElementById('hero-date').innerText = `${datePrefix} at ${heroClass.nextDate.toLocaleTimeString([], timeOptions)}`;
         heroTimer.dataset.target = heroClass.nextDate;
 
+        // RENDER THE REST OF THE DAY IN GRID
         currentDailyClasses.slice(1).forEach(cls => {
             const card = document.createElement('div');
             card.className = `exam-card`;
+            
             card.innerHTML = `
-                <div class="card-header"><span class="course-code">${cls.code}</span></div>
+                <div class="card-header">
+                    <span class="course-code">${cls.code}</span>
+                </div>
                 <div class="exam-title">${cls.title}</div>
                 <div class="exam-date">${datePrefix} at ${cls.nextDate.toLocaleTimeString([], timeOptions)} | ${cls.room}</div>
                 <div class="time-remaining" data-target="${cls.nextDate}">...</div>
@@ -314,13 +330,16 @@
         const now = new Date();
         let forceReload = false;
         
+        // Grid Timers
         document.querySelectorAll('.time-remaining').forEach(el => {
             const target = new Date(el.dataset.target);
             const diff = target - now;
+            
             if (diff <= 0) forceReload = true;
             else el.innerText = formatTime(diff);
         });
 
+        // Hero Timer
         const heroTimer = document.getElementById('hero-timer');
         if (heroTimer.dataset.target) {
             const target = new Date(heroTimer.dataset.target);
@@ -329,18 +348,20 @@
             else {
                 document.getElementById('hero-countdown').innerText = formatTime(diff);
                 const heroTitle = document.getElementById('hero-subject').innerText;
-                // Only fire notifications if the class is actually today to avoid weird bugs
+                
+                // Only fire notifications if the target class is happening today
                 if (getActiveDay() === now.getDay()) {
                     checkNotification(target, heroTitle);
                 }
             }
         }
 
+        // If a class just passed, drop it from the DOM
         if (forceReload) render(); 
     }
 
     function formatTime(ms) {
-        // Re-added days calculation so timers work when looking at next week
+        // Need to calculate days now in case user selects a future day
         const d = Math.floor(ms / (1000 * 60 * 60 * 24));
         const h = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
@@ -374,7 +395,9 @@
         if (diffMins <= 30 && diffMins > 29.8) {
             const notificationId = `${courseCode}-${classDate.getTime()}`;
             if (!notifiedClasses.includes(notificationId)) {
-                new Notification(`Class in 30 Minutes!`, { body: `Get ready for ${courseCode}.` });
+                new Notification(`Class in 30 Minutes!`, {
+                    body: `Get ready for ${courseCode}.`,
+                });
                 notifiedClasses.push(notificationId);
                 if (notifiedClasses.length > 20) notifiedClasses.shift();
                 localStorage.setItem('notifiedClasses', JSON.stringify(notifiedClasses));
@@ -386,11 +409,11 @@
     render();
     setInterval(updateTimers, 1000);
 
-    // Refresh exactly at midnight to reset the view if they left it open
+    // Refresh every minute to check if day rolled over exactly at midnight
     setInterval(() => {
         const now = new Date();
         if (now.getHours() === 0 && now.getMinutes() === 0) {
-            // Reset to 'Today' view
+            // Reset back to "Today" at midnight
             document.getElementById('day-selector').value = "-1";
             selectedDayOverride = -1;
             render();
@@ -399,16 +422,20 @@
 
     // --- 6. WAKE UP FROM SLEEP FIX ---
     document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "visible") updateTimers();
+        if (document.visibilityState === "visible") {
+            // The millisecond the user returns to the tab or unlocks their phone,
+            // force the timers to update so they don't see a frozen clock.
+            updateTimers();
+        }
     });
 
     // --- 7. SERVICE WORKER REGISTRATION ---
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js')
-              .then(reg => console.log('SW registered:', reg.scope))
-              .catch(err => console.warn('SW failed:', err));
-        });
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.warn('SW failed:', err));
+      });
     }
 </script>
 </body>
