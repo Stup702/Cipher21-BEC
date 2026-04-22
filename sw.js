@@ -1,16 +1,19 @@
-const CACHE_NAME = 'routine-v4'; // Bumped to v4 to never over store cache
+const CACHE_NAME = 'routine-v5'; 
 const ASSETS = [
   './',
   './index.html',
-  './routine.js',
   './manifest.json'
 ];
+
+// Replace this with your actual raw GitHub link!
+// Make sure it points to the 'main' or 'master' branch.
+const RAW_GITHUB_URL = 'https://raw.githubusercontent.com/YOUR_GITHUB_NAME/YOUR_REPO_NAME/main/routine.js';
 
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
   );
-  self.skipWaiting(); 
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', event => {
@@ -23,27 +26,38 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // only want to cache-bust our specific files, not external stuff (like Twemoji)
-  let requestToFetch = event.request;
-  
-  // Force the browser to ignore its temporary HTTP cache for our app files
-  if (requestToFetch.url.includes(self.location.origin)) {
-    requestToFetch = new Request(event.request.url, { cache: 'no-store' });
+  // 1. If the app is asking for routine.js, hijack it!
+  if (event.request.url.includes('routine.js')) {
+    event.respondWith(
+      fetch(RAW_GITHUB_URL, { cache: 'no-store' }) // Ask raw github, ignoring all browser caches
+        .then(networkResponse => {
+          if (!networkResponse.ok) throw new Error("GitHub fetch failed");
+          
+          // We got the fresh raw file! Save it into the offline cache under the local name.
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone); 
+          });
+          
+          return networkResponse;
+        })
+        .catch(() => {
+          // If offline (or GitHub is down), serve the last known good routine from cache
+          console.log("Offline: Falling back to cached routine.");
+          return caches.match(event.request);
+        })
+    );
+  } 
+  // 2. For everything else (index.html, manifest, icons), use standard Network-First
+  else {
+    event.respondWith(
+      fetch(event.request)
+        .then(networkResponse => {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request))
+    );
   }
-
-  event.respondWith(
-    fetch(requestToFetch)
-      .then(networkResponse => {
-        // We got fresh data from the absolute source! Save a copy to our offline cache.
-        const responseClone = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, responseClone); // Save it under the original request name
-        });
-        return networkResponse;
-      })
-      .catch(() => {
-        // If they are offline, fall back to the safe offline cache
-        return caches.match(event.request);
-      })
-  );
 });
