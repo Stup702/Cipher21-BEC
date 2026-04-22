@@ -5,10 +5,8 @@ const ASSETS = [
   './manifest.json'
 ];
 
-// Replace this with your actual raw GitHub link!
-// Make sure it points to the 'main' or 'master' branch.
-const RAW_GITHUB_URL = 'https://raw.githubusercontent.com/YOUR_GITHUB_NAME/YOUR_REPO_NAME/main/routine.js';
 
+const RAW_GITHUB_URL ="https://raw.githubusercontent.com/Stup702/Cipher21-BEC/main/routine.json"
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
@@ -27,15 +25,20 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   // 1. If the app is asking for routine.js, hijack it!
-  if (event.request.url.includes('routine.js')) {
+  if (event.request.url.includes('routine.json')) {
+    // Generate a unique timestamp right now
+    const timeStamp = new Date().getTime(); 
+    // Append it to the URL so GitHub's servers are forced to bypass their own cache
+    const bustedUrl = `${RAW_GITHUB_URL}?t=${timeStamp}`;
+
     event.respondWith(
-      fetch(RAW_GITHUB_URL, { cache: 'no-store' }) // Ask raw github, ignoring all browser caches
+      fetch(bustedUrl, { cache: 'no-store' }) 
         .then(networkResponse => {
           if (!networkResponse.ok) throw new Error("GitHub fetch failed");
           
-          // We got the fresh raw file! Save it into the offline cache under the local name.
           const responseClone = networkResponse.clone();
           caches.open(CACHE_NAME).then(cache => {
+            // Save it under the original clean name, not the messy timestamp name
             cache.put(event.request, responseClone); 
           });
           
