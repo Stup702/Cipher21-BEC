@@ -1,0 +1,195 @@
+[
+  {
+    "day": 6,
+    "start": "11:00",
+    "end": "13:00",
+    "code": "CSE 2206",
+    "title": "OOAD Lab (SM)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 6,
+    "start": "15:00",
+    "end": "16:00",
+    "code": "CSE 2207",
+    "title": "Microprocessor (MR)",
+    "room": "CZ-340"
+  },
+  {
+    "day": 6,
+    "start": "16:00",
+    "end": "17:00",
+    "code": "CSE 2205",
+    "title": "OOAD (SM)",
+    "room": "CZ-340"
+  },
+  {
+    "day": 0,
+    "start": "09:00",
+    "end": "10:00",
+    "code": "CSE 2211",
+    "title": "Fourier Analysis (MAI)",
+    "room": "MATH DEPT"
+  },
+  {
+    "day": 0,
+    "start": "10:00",
+    "end": "11:00",
+    "code": "CSE 2203",
+    "title": "DBMS (MKN)",
+    "room": "CZ-341"
+  },
+  {
+    "day": 0,
+    "start": "11:00",
+    "end": "13:00",
+    "code": "CSE 2204",
+    "title": "DBMS Lab (MKN)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 0,
+    "start": "14:00",
+    "end": "15:00",
+    "code": "CSE 2201",
+    "title": "Algo (MSH)",
+    "room": "CZ-340"
+  },
+  {
+    "day": 0,
+    "start": "15:00",
+    "end": "17:00",
+    "code": "CSE 2202",
+    "title": "Algo Lab (MSH)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 1,
+    "start": "09:00",
+    "end": "10:00",
+    "code": "CSE 2201",
+    "title": "Algo (MSH)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 1,
+    "start": "10:00",
+    "end": "11:00",
+    "code": "CSE 2203",
+    "title": "DBMS (MKN)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 1,
+    "start": "11:00",
+    "end": "13:00",
+    "code": "CSE 2202",
+    "title": "Algo Lab (MSH)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 1,
+    "start": "14:00",
+    "end": "16:00",
+    "code": "CSE 2204",
+    "title": "DBMS Lab (MKN)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 1,
+    "start": "16:00",
+    "end": "17:00",
+    "code": "CSE 2211",
+    "title": "Fourier Analysis (MAI)",
+    "room": "MATH DEPT"
+  },
+  {
+    "day": 2,
+    "start": "09:00",
+    "end": "10:00",
+    "code": "CSE 2201",
+    "title": "Algo (MSH)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 2,
+    "start": "10:00",
+    "end": "11:00",
+    "code": "CSE 2203",
+    "title": "DBMS (MKN)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 2,
+    "start": "11:00",
+    "end": "13:00",
+    "code": "CSE 2209",
+    "title": "Data & Comm (MB)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 2,
+    "start": "14:00",
+    "end": "16:00",
+    "code": "CSE 2208",
+    "title": "Assembly Language (MHR)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 2,
+    "start": "16:00",
+    "end": "17:00",
+    "code": "CSE 2207",
+    "title": "Microprocessor (MR)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 3,
+    "start": "09:00",
+    "end": "10:00",
+    "code": "CSE 2211",
+    "title": "Fourier Analysis (MAI)",
+    "room": "MATH DEPT"
+  },
+  {
+    "day": 3,
+    "start": "10:00",
+    "end": "11:00",
+    "code": "CSE 2205",
+    "title": "OOAD (SM)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 3,
+    "start": "11:00",
+    "end": "12:00",
+    "code": "CSE 2209",
+    "title": "Data & Comm (MB)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 3,
+    "start": "12:00",
+    "end": "13:00",
+    "code": "CSE 2207",
+    "title": "Microprocessor (MR)",
+    "room": "CZ-338"
+  },
+  {
+    "day": 3,
+    "start": "14:00",
+    "end": "16:00",
+    "code": "CSE 2210",
+    "title": "Data & Comm Lab (MB)",
+    "room": "LAB ROOM"
+  },
+  {
+    "day": 3,
+    "start": "14:00",
+    "end": "23:00",
+    "code": "CSE 2269",
+    "title": "Wednesday night shitfuckery",
+    "room": "Your mass"
+
+  }
+]

@@ -1,7 +1,9 @@
-const CACHE_NAME = 'routine-v1';
+const CACHE_NAME = 'routine-v2'; // Changed to v2 to force an update
 const ASSETS = [
   './',
-  './index.html'
+  './index.html',
+  './routine.js',     // CRITICAL: Cache your schedule data!
+  './manifest.json'   // Cache the manifest
 ];
 
 // On install: cache the app shell
