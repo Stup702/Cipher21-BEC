@@ -247,7 +247,10 @@
         }
 
         // Render the grid
-        currentDailyClasses.forEach(cls => {
+        currentDailyClasses.forEach((cls, index) => {
+            // Skip rendering this card if it is currently the Hero item
+            if (index === activeClassIndex) return; 
+
             const timeOpts = { hour: '2-digit', minute:'2-digit' };
             const timeString = `${cls.startDate.toLocaleTimeString([], timeOpts)} - ${cls.endDate.toLocaleTimeString([], timeOpts)}`;
             
